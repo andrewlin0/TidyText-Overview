@@ -531,5 +531,9 @@ While working with this package, we’ve identified some advantages and disadvan
 
 > https://cran.r-project.org/web/packages/
 
+> https://nlp.stanford.edu/IR-book/html/htmledition/tokenization-1.html
+
+> https://twitter.com/realDonaldTrump/
+
 
 
