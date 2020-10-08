@@ -1,0 +1,535 @@
+---
+title: "Midterm: TidyText Project"
+author: "Andrew Lin, Ryan Biswas, Ellen Wray"
+date: "10/08/2020"
+output:
+  html_document:
+    toc: yes
+    theme: cosmo
+    toc_float: yes
+  pdf_document:
+    toc: yes
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE, cache=TRUE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, cache = TRUE)
+```
+
+```{r, message=FALSE, warning=FALSE, include = FALSE}
+install.packages("tidytext")
+install.packages("tidyverse")
+install.packages("plotly")
+install.packages("textdata")
+```
+
+```{r, message=FALSE, warning=FALSE, include = FALSE}
+library(tidytext)
+library(tidyverse)
+library(plotly)
+library(knitr)
+library(dplyr)
+library(janeaustenr)
+library(textdata)
+```
+![](https://pbs.twimg.com/media/DeacLnGU0AAlmS9.png)
+
+## Package Overview
+
+### TidyText
+
+TidyText was created for the process of text mining, used especially within tidyverse, to be able to analyze and visualize text. The easy manipulation of text is essential to the process of text mining and interpreting natural language processing. This package allows the R user to manipulate text as a user would manipulate any kind of traditional data. This package delves into tidying text using unnesting functions, performing sentiment analysis, using the term frequency and inverse document frequency (tf-idf) statistics to highlight important terms within documents, and analyzing word networks based on varying n-grams.
+
+
+### Version History
+TidyText is currently on version 0.2.6, so there were 15 versions before this (0.10 - 0.2.6). Each version has become increasingly complex and added more functionality to the package.
+
+### Usage
+
+Tidytext allows you to apply data wrangling and data visualization methods to text data the same way you would apply them to other data. This is achieved by treating text as data frames of individual words, which allows for easy manipulation, summarization, and visualization of the characteristics of text and it integrates natural language processing (NLP) into the workflow process. There are also sentiment analysis and text mining techniques in this library as well, which will be covered later on.
+
+### Dependency to Other Packages
+
+While tidytext has a wide range of functionality, it is dependent on other packages for some of its analysis. The packages it depends on include:
+
+*tidyr*
+
+As obvious from its name, tidytext is reliant upon tidyr. The optimal goal of tidytext is to convert text into usable ‘tidy’ data that can be manipulated using the traditional functions in tidyverse. It arranges the text into tibbles that can be manipulated and cleaned with tidyverse.
+
+*dplyr*
+
+This is another package that is used to clean and manipulate the tibbles of text created from the tidytext package. Dplyr has a wide arrange of functions that are helpful, including join functions like `anti_join()`, the `count()` function, and 
+
+*wordcloud*
+
+This is a package used for visualizing text alongside the data created from tidytext. The word cloud function allows the R user to create word clouds of their data, which organize text in a cloudlike pattern with the frequency / word counts being represented by a variety of factors such as size, color, etc.
+
+*ggplot2*
+
+
+This package is used for elegant data visualization. It layers different components of the visualization to make a beautiful one. Since tidytext makes text fit the criteria tidy data, ggplot2 can be easily used on this new text data to make for appealing visualizations.
+
+*tm*
+
+This is a package that also offers functions for text mining, specifically importing data, handling corpuses, processing the data, and creating matrices of term-documents. It is used in conjunction with the tidytext package for doing text mining and analysis.
+
+
+## Examples of Usage
+
+
+### Unnest Tokens {.tabset}
+
+The definition of a token from Stanford, "A token is an instance of a sequence of characters in some particular document that are grouped together as a useful semantic unit for processing."
+
+We will be using Trump's remarks about leaving the Walter Reed Medical Center as the text for these functions.
+
+```{r, echo = FALSE}
+# Trump Speeches
+
+trump1 <- c("I just left Walter Reed Medical Center, and it’s really something very special. The doctors, the nurses, the first responders, and I learned so much about coronavirus. One thing that’s for certain, don’t let it dominate you. Don’t be afraid of it. You’re going to beat it. We have the best medical equipment. We have the best medicines all developed recently, and you’re going to beat it. I went … I didn’t feel so good. And two days ago, I could have left two days ago. Two days ago, I felt great. Like, better than I have in a long time. I said just recently … better than 20 years ago. Don’t let it dominate. Don’t let it take over your lives. Don’t let that happen.                                                                                                        We have the greatest country in the world. We’re going back. We’re going back to work. We’re going to be out front. As your leader, I had to do that. I knew there’s danger to it, but I had to do it. I stood out front. I led. Nobody that’s a leader would not do what I did. And I know there’s a risk. There’s a danger. But that’s okay, and now I’m better. Maybe I’m immune. I don’t know. But don’t let it dominate your lives. Get out there. Be careful. We have the best medicines in the world, and they’re all happened very shortly, and they’re all getting approved. And the vaccines are coming momentarily. Thank you very much. And Walter Reed, what a group of people. Thank you very much.")
+
+trump2 <- c("We’re getting great reports from the doctors. This is an incredible hospital, Walter Reed. The work they do is just absolutely amazing. And I want to thank them all. The nurses, the doctors, everybody here. I’ve also gotten to meet some of the soldiers and the first responders, and what a group. I also think we’re going to pay a little surprise to some of the great patriots that we have out on the street. And they’ve been out there for a long time, and they’ve got Trump flags. And they love our country. So I’m not telling anybody, but you. But I’m about to make a little surprise visit.
+
+So perhaps I’ll get there before you get to see me. But when I look at the enthusiasm, and we have enthusiasm like probably nobody’s ever had. Our people that love the job we’re doing. We have more enthusiasm than maybe anybody. So it’s been a very interesting journey. I learned a lot about COVID. I learned it by really going to school. This is the real school. This isn’t the “let’s read the book” school. And I get it. And I understand it. And it’s a very interesting thing. And I’m going to be letting you know about it.
+
+In the meantime, we love the USA, and we love what’s happening. Thank you.")
+
+
+trump3 <- c("I want to begin by thanking all of the incredible medical professionals, the doctors, the nurses, everybody at Walter Reed Medical Center, I think it’s the finest in the world, for the incredible job they’ve been doing. I came here, wasn’t feeling so well. I feel much better now. We’re working hard to get me all the way back. I have to be back, because we still have to make America great again. We’ve done an awfully good job of that, but we still have steps to go, and we have to finish that job, and I’ll be back. I think I’ll be back soon, and I look forward to finishing up the campaign the way it was started, and the way we’ve been doing, and the kind of numbers that we’ve been doing. We’ve been so proud of it, but this was something that happened, and it’s happened to millions of people all over the world, and I’m fighting for them. Not just in the US. I’m fighting for them all over the world.
+
+We’re going to beat this coronavirus, or whatever you want to call it, and we’re going to beat it soundly. So many things have happened. If you look at the therapeutics, which I’m taking right now, some of them, and others are coming out soon that are looking like, frankly, they’re miracles, if you want to know the truth. They’re miracles. People criticize me when I say that, but we have things happening that look like they’re miracles coming down from God, so I just want to tell you that I’m starting to feel good. You don’t know over the next period of a few days, I guess that’s the real test, so we’ll be seeing what happens over those next couple of days. I just want to be so thankful for all of the support I’ve seen, whether it’s on television, or reading about it. I most of all appreciate what’s been said by the American people, by almost a bipartisan consensus of American people. It’s a beautiful thing to see, and I very much appreciate it, and I won’t forget it. I promise you that.
+
+I also want to thank the leaders of the world for their condolences, and they know what we’re going through. They know what, as your leader, what I have to go through, but I had no choice, because I just didn’t want to stay in the White House. I was given that alternative. Stay in the White House, lock yourself in. Don’t ever leave. Don’t even go to the Oval Office. Just stay upstairs, and enjoy it. Don’t see people. Don’t talk to people, and just be done with it, and I can’t do that. I had to be out front, and this is America. This is the United States. This is the greatest country in the world. This is the most powerful country in the world. I can’t be locked up in a room upstairs, and totally safe, and just say, “Hey, whatever happens, happens.” I can’t do that.
+
+We have to confront problems. As a leader, you have to confront problems. There’s never been a great leader that would have done that, so that’s where it is. I’m doing well. I want to thank everybody. Our first lady is doing very well. Melania asked me to say something as to the respect that she has for our country, the love that she has for our country, and we’re both doing well. Melania is really handling it very nicely, as you’ve probably read. She’s slightly younger than me, just a little tiny bit, and therefore just … We know the disease. We know the situation with age versus younger people, and Melania is handling it, statistically, like it’s supposed to be handled, and that makes me very happy, and it makes the country very happy, but I’m also doing well, and I think we’re going to have a very good result. Again, over the next few days, we’re going to probably know for sure, so I just want to thank everybody out there, everybody all over the world, specifically the United States. The outpouring of love has been incredible. I will never forget. Thank you very much.")
+
+
+trump4 <- c("Thank you very much. Good afternoon. Thank you. I’m here today to talk about our relationship with China and several new measures to protect American security and prosperity.
+
+China’s pattern of misconduct is well known. For decades, they have ripped off the United States like no one has ever done before. Hundreds of billions of dollars a year were lost dealing with China, especially over the years during the prior administration. China raided our factories, offshored our jobs, gutted our industries, stole our intellectual property, and violated their commitments under the World Trade Organization. To make matters worse, they are considered a developing nation getting all sorts of benefits that others, including the United States, are not entitled to.
+
+But I never solely blamed China for this. They were able to get away with a theft like no one was able to get away with before because of past politicians and, frankly, past presidents. But unlike those who came before, my administration negotiated and fought for what was right. It’s called: fair and reciprocal treatment.
+
+China has also unlawfully claimed territory in the Pacific Ocean, threatening freedom of navigation and international trade. And they broke their word to the world on ensuring the autonomy of Hong Kong.
+
+The United States wants an open and constructive relationship with China, but achieving that relationship requires us to vigorously defend our national interests. The Chinese government has continually violated its promises to us and so many other nations.
+
+These plain facts cannot be overlooked or swept aside. The world is now suffering as a result of the malfeasance of the Chinese government. China’s cover-up of the Wuhan virus allowed the disease to spread all over the world, instigating a global pandemic that has cost more than 100,000 American lives and over a million lives worldwide.
+
+Chinese officials ignored their reporting obligations to the World Health Organization and pressured the World Health Organization to mislead the world when the virus was first discovered by Chinese authorities.
+
+Countless lives have been taken, and profound economic hardship has been inflicted all around the globe. They strongly recommended against me doing the early ban from China, but I did it anyway and was proven to be 100 percent correct.
+
+China has total control over the World Health Organization, despite only paying $40 million per year compared to what the United States has been paying, which is approximately $450 million a year.
+
+We have detailed the reforms that it must make and engage with them directly, but they have refused to act. Because they have failed to make the requested and greatly needed reforms, we will be today terminating our relationship with the World Health Organization and redirecting those funds to other worldwide and deserving, urgent, global public health needs.
+
+The world needs answers from China on the virus. We must have transparency. Why is it that China shut off infected people from Wuhan to all other parts of China? It went nowhere else. It didn’t go to Beijing; it went nowhere else. But allowed them to freely travel throughout the world, including Europe and the United States.
+
+The death and destruction caused by this is incalculable. We must have answers not only for us but for the rest of the world.
+
+This pandemic has underscored the crucial importance of building up America’s economic independence, reshoring our critical supply chains and protecting America’s scientific and technological advances.
+
+For years, the government of China has conducted illicit espionage to steal our industrial secrets, of which there are many. Today, I will issue a proclamation to better secure our nation’s vital university research and to suspend the entry of certain foreign nationals from China who we have identified as potential security risks.
+
+I am also taking action to protect the integrity of America’s financial system — by far, the best in the world. I am instructing my Presidential Working Group on Financial Markets to study the differing practices of Chinese companies listed on the U.S. financial markets, with the goal of protecting American investors.
+
+Investment firms should not be subjecting their clients to the hidden and undue risks associated with financing Chinese companies that do not play by the same rules. Americans are entitled to fairness and transparency.
+
+Several of the most significant actions we’re taking pertain to the deeply troubling situations unfolding in Hong Kong.
+
+This week, China unilaterally imposed control over Hong Kong security. This was a plain violation of Beijing’s treaty obligations with the United Kingdom in the Declaration of 1984 and explicit provisions of Hong Kong’s Basic Law. It has 27 years to go.
+
+The Chinese government’s move against Hong Kong is the latest in a series of measures that are diminishing the city’s longstanding and very proud status.
+
+This is a tragedy for the people of Hong Kong, the people of China, and indeed the people of the world. China claims it is protecting national security. But the truth is that Hong Kong was secure and prosperous as a free society. Beijing’s decision reverses all of that. It extends the reach of China’s invasive state security apparatus into what was formerly a bastion of liberty.
+
+China’s latest incursion, along with other recent developments that degraded the territory’s freedoms, makes clear that Hong Kong is no longer sufficiently autonomous to warrant the special treatment that we have afforded the territory since the handover.
+
+China has replaced its promised formula of “one country, two systems” with “one country, one system.”
+
+Therefore, I am directing my administration to begin the process of eliminating policy exemptions that give Hong Kong different and special treatment.
+
+My announcement today will affect the full range of agreements we have with Hong Kong, from our extradition treaty to our export controls on dual-use technologies and more, with few exceptions.
+
+We will be revising the State Department’s travel advisory for Hong Kong to reflect the increased danger of surveillance and punishment by the Chinese state security apparatus.
+
+We will take action to revoke Hong Kong’s preferential treatment as a separate customs and travel territory from the rest of China.
+
+The United States will also take necessary steps to sanction PRC and Hong Kong officials directly or indirectly involved in eroding Hong Kong’s autonomy and — just if you take a look, smothering — absolutely smothering Hong Kong’s freedom. Our actions will be strong. Our actions will be meaningful.
+
+More than two decades ago, on a rainy night in 1997, British soldiers lowered the Union Flag, and Chinese soldiers raised the Chinese flag in Hong Kong. The people of Hong Kong felt simultaneously proud of their Chinese heritage and their unique Hong Kong identity. The people of Hong Kong hoped that in the years and decades to come, China would increasingly come to resemble its most radiant and dynamic city. The rest of the world was electrified by a sense of optimism that Hong Kong was a glimpse into China’s future — not that Hong Kong would grow into a reflection of China’s past.
+
+In every decision, I will continue to proudly defend and protect the workers, families, and citizens of the United States of America.
+
+Thank you very much. Thank you.")
+
+trumptibble <- tibble(text = trump1)
+trumptibble2 <- tibble(text = trump2)
+trumptibble3 <- tibble(text = trump3)
+trumptibble4 <- tibble(text = trump4)
+```
+
+#### *unnest_tokens*
+
+Splits a column into tokens using the tokenizers package, splitting the table into one token per row. This function supports non-standard evaluation through the tidyeval framework. This function also has other sibling wrapper functions that works with other specific data formats such as regular expressions and tweets.
+
+```{r, comment=NA, message = FALSE}
+trumptibble %>% unnest_tokens(word, text)
+```
+
+
+```{r, echo=FALSE, message = FALSE}
+trumptibble %>% 
+    unnest_tokens(word, text) %>% 
+    anti_join(stop_words) %>%
+    count(word, sort = TRUE) %>% 
+    filter(n > 2) %>%
+    mutate(word = reorder(word, n)) %>%
+    ggplot(aes(word, n, fill=word)) +
+    geom_col() +
+    xlab(NULL) +
+    coord_flip()
+```
+
+#### *unnest_regex*
+
+Special function that wraps the original unnest_tokens function as 
+
+> unnest_tokens( token = "regex" )
+
+```{r, comment=NA}
+trumptibble %>% unnest_regex(word, text, pattern = "We")
+```
+
+#### *unnest_ngrams*
+
+Splits the text by amount of n. n-grams are used to predict the next item in a sequence. Special function that wraps the original unnest_tokens function as 
+
+> unnest_tokens( token = "ngrams" )
+
+3 words per line
+```{r, comment=NA}
+trumptibble %>% unnest_ngrams(word, text, n = 3)
+```
+
+5 words per line
+```{r, comment=NA}
+trumptibble %>% unnest_ngrams(word, text, n = 5)
+```
+
+#### *unnest_sentences*
+Special function that wraps the original unnest_tokens function as 
+
+> unnest_tokens( token = "sentences" )
+
+```{r, comment=NA}
+trumptibble %>% unnest_sentences(word, text)
+```
+
+"Thank you very much" was the only sentence repeated more than once.
+
+```{r, echo=FALSE, message = FALSE}
+trumptibble %>% unnest_sentences(word, text)%>%
+    anti_join(stop_words) %>%
+    count(word, sort = TRUE) %>% 
+    filter(n > 1) %>%
+    mutate(word = reorder(word, n)) %>%
+    ggplot(aes(word, n, fill=word)) +
+    geom_col() +
+    xlab(NULL) +
+    coord_flip()
+
+```
+
+
+#### *unnest_characters*
+
+Special function that wraps the original unnest_tokens function as 
+
+> unnest_tokens( token = "characters" )
+
+```{r, comment=NA, message = FALSE}
+trumptibble %>% unnest_characters(word, text)
+```
+
+e, t, and o are the most used characters in this specific speech.
+
+```{r, echo=FALSE, message = FALSE}
+trumptibble %>%
+  unnest_characters(word, text) %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 1) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n, fill=word)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip()
+
+```
+
+#### *unnest_tweets*
+Special function that wraps the original unnest_tokens function as  
+
+> unnest_tokens( token = "tweets" )
+
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Hope Hicks, who has been working so hard without even taking a small break, has just tested positive for Covid 19. Terrible! The First Lady and I are waiting for our test results. In the meantime, we will begin our quarantine process!</p>&mdash; Donald J. Trump (@realDonaldTrump) <a href="https://twitter.com/realDonaldTrump/status/1311859538279239686?ref_src=twsrc%5Etfw">October 2, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Tonight, <a href="https://twitter.com/FLOTUS?ref_src=twsrc%5Etfw">@FLOTUS</a> and I tested positive for COVID-19. We will begin our quarantine and recovery process immediately. We will get through this TOGETHER!</p>&mdash; Donald J. Trump (@realDonaldTrump) <a href="https://twitter.com/realDonaldTrump/status/1311892190680014849?ref_src=twsrc%5Etfw">October 2, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Doctors, Nurses and ALL at the GREAT Walter Reed Medical Center, and others from likewise incredible institutions who have joined them, are AMAZING!!!Tremendous progress has been made over the last 6 months in fighting this PLAGUE. With their help, I am feeling well!</p>&mdash; Donald J. Trump (@realDonaldTrump) <a href="https://twitter.com/realDonaldTrump/status/1312442195509563392?ref_src=twsrc%5Etfw">October 3, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+```{r, comment=NA, message=FALSE, echo=FALSE}
+
+posts <- c("Hope Hicks, who has been working so hard without even taking a small break, has just tested positive for Covid 19. Terrible! The First Lady and I are waiting for our test results. In the meantime, we will begin our quarantine process!", "Tonight, @FLOTUS and I tested positive for COVID-19. We will begin our quarantine and recovery process immediately. We will get through this TOGETHER!", "Doctors, Nurses and ALL at the GREAT Walter Reed Medical Center, and others from likewise incredible institutions who have joined them, are AMAZING!!!Tremendous progress has been made over the last 6 months in fighting this PLAGUE. With their help, I am feeling well!")
+
+tweets <- tibble(text = posts)
+
+```
+
+
+```{r,echo=FALSE, message = FALSE}
+tweets %>%
+  unnest_tweets(word, text) %>%
+  anti_join(stop_words) %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 1) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n, fill=word)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip()
+```
+
+
+### Stop Words
+
+*stop_words*
+
+Stop words are words that are extremely common and don't add a lot of meaning to a document. There are three lexicons: AFINN, BING, and NRC. Some examples of stop words are: the, a, an, it, and also. The snowball and SMART sets are pulled from the tm package.
+
+```{r, comment=NA}
+stop_words %>% count(lexicon, sort=TRUE)
+stop_words
+```
+
+### Sentiment Analysis
+
+We can take a cleaned up corpus and try to analyze the sentiments from the patterns and frequencies of the words. Sentiment Analysis relies on pre-defined lexicons that categorize words according to sentiment. The three most used sentiment lexicon data sets are:
+
+*sentiments*
+
+From Bing Liu, Finn Årup Nielsen, and Saif Mohammad and Peter Turney respectively:
+
+‘BING’: labels words as either positive or negative
+
+‘AFINN’: gives words a rating from -5 to +5
+
+‘NRC’: categorizes words into human emotions like joy, fear, sadness.  
+
+*get_sentiments*
+
+This function allows us to load these lexicons as dataframes which we can bind into our corpus with functions like anti_join()
+
+```{r, comment=NA, echo=FALSE, warning = FALSE, message = FALSE}
+trumptibble %>%
+    unnest_tokens(word, text) %>% 
+    anti_join(stop_words) %>% 
+    inner_join(get_sentiments("bing"), by = "word")
+```
+
+```{r, comment=NA, echo = FALSE, warning=FALSE, message = FALSE}
+trumptibble_gs <- trumptibble %>% unnest_tokens(word, text)
+trumptibble_gs2 <- trumptibble2 %>% unnest_tokens(word, text)
+trumptibble_gs3 <- trumptibble3 %>% unnest_tokens(word, text)
+trumptibble_gs4 <- trumptibble4 %>% unnest_tokens(word, text)
+```
+
+```{r, comment=NA, echo = FALSE, warning=FALSE, message = FALSE}
+afinn <- trumptibble_gs %>% 
+    inner_join(get_sentiments("afinn")) %>% 
+    group_by(index = word) %>% 
+    summarise(sentiment = sum(value)) %>% 
+    mutate(method = "AFINN")
+
+afinn2 <- trumptibble_gs2 %>% 
+    inner_join(get_sentiments("afinn")) %>% 
+    group_by(index = word) %>% 
+    summarise(sentiment = sum(value)) %>% 
+    mutate(method = "AFINN")
+
+afinn3 <- trumptibble_gs3 %>% 
+    inner_join(get_sentiments("afinn")) %>% 
+    group_by(index = word) %>%
+    summarise(sentiment = sum(value)) %>% 
+    mutate(method = "AFINN")
+
+afinn4 <- trumptibble_gs4 %>% 
+    inner_join(get_sentiments("afinn")) %>% 
+    group_by(index = word) %>%
+    summarise(sentiment = sum(value)) %>% 
+    mutate(method = "AFINN")
+```
+
+<blockquote class="twitter-tweet"><p lang="und" dir="ltr"><a href="https://t.co/OxmRcZ5nUZ">pic.twitter.com/OxmRcZ5nUZ</a></p>&mdash; Donald J. Trump (@realDonaldTrump) <a href="https://twitter.com/realDonaldTrump/status/1313267615083761665?ref_src=twsrc%5Etfw">October 5, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+```{r, comment=NA, echo = FALSE, warning=FALSE, message = FALSE}
+afinn %>%
+    ggplot(aes(index, sentiment, fill = sentiment)) +
+    labs(title = "Speech 1 Sentiment") +
+    geom_col(show.legend = FALSE)
+```
+
+<blockquote class="twitter-tweet"><p lang="und" dir="ltr"><a href="https://t.co/0Bm9W2u1x7">pic.twitter.com/0Bm9W2u1x7</a></p>&mdash; Donald J. Trump (@realDonaldTrump) <a href="https://twitter.com/realDonaldTrump/status/1312864232711520257?ref_src=twsrc%5Etfw">October 4, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+```{r, comment=NA, echo = FALSE, warning=FALSE, message = FALSE}
+afinn2 %>%
+    ggplot(aes(index, sentiment, fill = sentiment)) +
+    labs(title = "Speech 2 Sentiment") +
+    geom_col(show.legend = FALSE)
+```
+
+<blockquote class="twitter-tweet"><p lang="und" dir="ltr"><a href="https://t.co/gvIPuYtTZG">pic.twitter.com/gvIPuYtTZG</a></p>&mdash; Donald J. Trump (@realDonaldTrump) <a href="https://twitter.com/realDonaldTrump/status/1312525833505058816?ref_src=twsrc%5Etfw">October 3, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+```{r, comment=NA, echo = FALSE, warning=FALSE, message = FALSE}
+afinn3 %>%
+    ggplot(aes(index, sentiment, fill = sentiment)) +
+    labs(title = "Speech 3 Sentiment") +
+    coord_flip() +
+    geom_col(show.legend = FALSE)
+```
+
+<blockquote class="twitter-tweet"><p lang="und" dir="ltr"><a href="https://t.co/mljmx2o0G7">pic.twitter.com/mljmx2o0G7</a></p>&mdash; Donald J. Trump (@realDonaldTrump) <a href="https://twitter.com/realDonaldTrump/status/1266455834457968640?ref_src=twsrc%5Etfw">May 29, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+```{r, comment=NA, echo = FALSE, warning=FALSE, message = FALSE}
+afinn4 %>%
+    ggplot(aes(index, sentiment, fill = sentiment)) +
+    labs(title = "Speech 4 Sentiment") +
+    coord_flip() +
+    geom_col(show.legend = FALSE)
+```
+
+### Term Frequency - Inverse Document Frequency
+
+```{r, comment=NA, echo = FALSE, warning=FALSE, message=FALSE}
+
+trump_speeches <- c(trump1, trump2, trump3)
+
+Trump1 <- tibble(text = trump_speeches[1]) %>%
+    unnest_tokens(word, text) %>%
+    mutate(Speech = 1)
+    
+Trump2 <- tibble(text = trump_speeches[2]) %>%
+    unnest_tokens(word, text) %>%
+    mutate(Speech = 2)
+    
+Trump3 <- tibble(text = trump_speeches[3]) %>%
+    unnest_tokens(word, text) %>%
+    mutate(Speech = 3)
+    
+Trump_Speeches <- rbind(Trump1, Trump2, Trump3)
+
+trump_words <- Trump_Speeches %>%
+    count(Speech, word, sort = TRUE)
+
+total_words <- trump_words %>% 
+    group_by(Speech) %>% 
+    summarize(total = sum(n))
+
+trump_words <- left_join(trump_words, total_words)
+
+trump_words <- trump_words %>%
+  bind_tf_idf(word, Speech, n)
+
+head(trump_words)
+
+tail(trump_words)
+
+trump_words %>%
+    arrange(desc(tf_idf)) %>%
+    mutate(word = factor(word, levels = rev(unique(word)))) %>% 
+    group_by(Speech) %>% 
+    top_n(15) %>% 
+    ungroup() %>%
+    ggplot(aes(word, tf_idf, fill = Speech)) +
+    geom_col(show.legend = FALSE) +
+    labs(x = NULL, y = "tf-idf") +
+    facet_wrap(~Speech, ncol = 3, scales = "free") +
+    coord_flip()
+```
+
+### Other
+
+*parts_of_speech*
+
+Parts of speech for English words from the Moby Project by Grady Ward.
+
+```{r, comment=NA}
+parts_of_speech %>% count(pos, sort = TRUE)
+parts_of_speech
+```
+
+```{r, comment=NA, message=FALSE, echo = FALSE}
+parts_of_speech %>%
+  count(pos, sort = TRUE) %>% 
+  filter(n > 4) %>%
+  mutate(pos = reorder(pos, n)) %>%
+  ggplot(aes(pos, n, fill=pos)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip()
+```
+
+*nma_words*
+
+English negators, modals, and adverbs, as a data frame. A few of these entries are two-word phrases instead of single words.
+
+```{r, comment=NA}
+nma_words %>% count(modifier, sort=TRUE)
+nma_words
+```
+
+```{r, comment=NA, message=FALSE, echo = FALSE}
+nma_words %>%
+  count(modifier, sort = TRUE) %>% 
+  filter(n > 4) %>%
+  mutate(modifier = reorder(modifier, n)) %>%
+  ggplot(aes(modifier, n, fill=modifier)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip()
+```
+
+
+## Similar Packages
+
+*quanteda*
+
+A fast, flexible, and comprehensive framework for quantitative text analysis in R. Provides functionality for corpus management, creating and manipulating tokens and ngrams, exploring keywords in context, forming and manipulating sparse matrices of documents by features and feature co-occurrences, analyzing keywords, computing feature similarities and distances, applying content dictionaries, applying supervised and unsupervised machine learning, visually representing text and text analyses, and more. This is preferred over the tokenizer package as it utilizes multi threaded processing.
+
+*text2vec*
+
+Fast and memory-friendly tools for text vectorization, topic modeling (LDA, LSA), word embeddings (GloVe), similarities. This package provides a source-agnostic streaming API, which allows researchers to perform analysis of collections of documents which are larger than available RAM. All core functions are parallelized to benefit from multicore machines.
+
+## Reflection
+
+In conclusion, tidytext offers simplified but fast access to a few key text analysis tools. These tools enable the user to split text, gather key statistics, and then analyze it based on a sentiment lexicon. The functions in this package are highly compatible with other packages in tidyverse so it can be easily integrated into other projects. 
+
+While working with this package, we’ve identified some advantages and disadvantages to doing text analysis using tidytext. First and foremost, this package is dependent on quite a few other packages. To do any kind of worthy analysis, an R user must also have installed tidyverse, dplyr, other text analysis packages such as tm, and plotting packages such as plotly and ggplot. It is not a stand alone package - it is used in conjunction with many other packages. Also, because of the high dimensional nature of text analysis, the tidytext package is limiting in the value of analysis it produces. For example, the package doesn’t touch upon other essential models in traditional text analysis such as bag of words. The book touches upon other theories such as Latent Dirichlet Allocation, but gives no insight on how to produce generative models of such, and this distribution is a huge part of text analysis. However, this is a fairly robust package for the basics of text-analysis, and for an R user looking for a quick and easy to explore text analysis will be satisfied by this package. It’s written textbook is also an excellent resource and goes into much detail about the theories behind the package and examples of code for the package.
+ 
+
+## Citations
+
+> https://humansofdata.atlan.com/2018/07/introduction-tidytext-mining/
+
+> https://towardsdatascience.com/r-packages-for-text-analysis-ad8d86684adb
+
+> https://www.rdocumentation.org/packages/tidytext/versions/0.2.0
+
+> https://www.tidytextmining.com/preface.html
+
+> https://cran.r-project.org/web/packages/
+
+
+
