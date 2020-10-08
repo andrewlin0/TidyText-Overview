@@ -59,7 +59,7 @@ As obvious from its name, tidytext is reliant upon tidyr. The optimal goal of ti
 
 *dplyr*
 
-This is another package that is used to clean and manipulate the tibbles of text created from the tidytext package. Dplyr has a wide arrange of functions that are helpful, including join functions like `anti_join()`, the `count()` function, and 
+This is another package that is used to clean and manipulate the tibbles of text created from the tidytext package. Dplyr has a wide arrange of functions that are helpful, including join functions like the `anti_join()` and `count()` functions. 
 
 *wordcloud*
 
