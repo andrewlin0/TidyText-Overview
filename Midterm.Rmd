@@ -59,7 +59,7 @@ As obvious from its name, tidytext is reliant upon tidyr. The optimal goal of ti
 
 *dplyr*
 
-This is another package that is used to clean and manipulate the tibbles of text created from the tidytext package. Dplyr has a wide arrange of functions that are helpful, including join functions like the `anti_join()` and `count()` functions. 
+This is another package that is used to clean and manipulate the tibbles of text created from the tidytext package. Dplyr has a wide arrange of functions that are helpful, including join functions like the `anti_join()` and `count()` functions.
 
 *wordcloud*
 
@@ -516,7 +516,7 @@ Fast and memory-friendly tools for text vectorization, topic modeling (LDA, LSA)
 
 In conclusion, tidytext offers simplified but fast access to a few key text analysis tools. These tools enable the user to split text, gather key statistics, and then analyze it based on a sentiment lexicon. The functions in this package are highly compatible with other packages in tidyverse so it can be easily integrated into other projects. 
 
-While working with this package, we’ve identified some advantages and disadvantages to doing text analysis using tidytext. First and foremost, this package is dependent on quite a few other packages. To do any kind of worthy analysis, an R user must also have installed tidyverse, dplyr, other text analysis packages such as tm, and plotting packages such as plotly and ggplot. It is not a stand alone package - it is used in conjunction with many other packages. Also, because of the high dimensional nature of text analysis, the tidytext package is limiting in the value of analysis it produces. For example, the package doesn’t touch upon other essential models in traditional text analysis such as bag of words. The book touches upon other theories such as Latent Dirichlet Allocation, but gives no insight on how to produce generative models of such, and this distribution is a huge part of text analysis. However, this is a fairly robust package for the basics of text-analysis, and for an R user looking for a quick and easy to explore text analysis will be satisfied by this package. It’s written textbook is also an excellent resource and goes into much detail about the theories behind the package and examples of code for the package.
+While working with this package, we’ve identified some advantages and disadvantages to doing text analysis using tidytext. First and foremost, this package is dependent on quite a few other packages. To do any kind of worthy analysis, an R user must also have installed tidyverse, dplyr, other text analysis packages such as tm, and plotting packages such as plotly and ggplot. It is not a stand alone package - it is used in conjunction with many other packages. Also, because of the high dimensional nature of text analysis, the tidytext package is limiting in the value of analysis it produces. For example, the book touches upon other theories such as Latent Dirichlet Allocation, but gives no insight on how to produce generative models of such, and this distribution is a huge part of text analysis. However, this is a fairly robust package for the basics of text-analysis, and for an R user looking for a quick and easy to explore text analysis will be satisfied by this package. It’s written textbook is also an excellent resource and goes into much detail about the theories behind the package and examples of code for the package.
  
 
 ## Citations
